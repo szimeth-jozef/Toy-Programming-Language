@@ -2,15 +2,17 @@ package lexer
 
 import "Interpreter/token"
 
+// Lexer is a structure to hold input data and data helping tokenizig
 type Lexer struct {
-	input		string
-	position	int
-	readPosition	int
-	char		byte
+	input        string
+	position     int
+	readPosition int
+	char         byte
 }
 
+// New returns a populated Lexer struct instace with the input parameter
 func New(input string) *Lexer {
-	lexer := &Lexer{ input: input }
+	lexer := &Lexer{input: input}
 	lexer.readChar()
 	return lexer
 }
@@ -25,6 +27,15 @@ func (l *Lexer) readChar() {
 	l.readPosition++
 }
 
+func (l *Lexer) peekChar() byte {
+	if l.readPosition >= len(l.input) {
+		return 0
+	}
+	return l.input[l.readPosition]
+}
+
+// NextToken is stepping through the input data of a Lexer
+// struct and returns a Token struct containig the token type and the literal
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
@@ -32,9 +43,29 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.char {
 	case '=':
-		tok = newToken(token.ASSIGN, l.char)
+		if l.peekChar() == '=' {
+			char := l.char
+			l.readChar()
+			tok = token.Token{Type: token.EQ, Literal: string(char) + string(l.char)}
+		} else {
+			tok = newToken(token.ASSIGN, l.char)
+		}
 	case '+':
 		tok = newToken(token.PLUS, l.char)
+	case '-':
+		tok = newToken(token.MINUS, l.char)
+	case '!':
+		if l.peekChar() == '=' {
+			char := l.char
+			l.readChar()
+			tok = token.Token{Type: token.NOT_EQ, Literal: string(char) + string(l.char)}
+		} else {
+			tok = newToken(token.BANG, l.char)
+		}
+	case '/':
+		tok = newToken(token.SLASH, l.char)
+	case '*':
+		tok = newToken(token.ASTERISK, l.char)
 	case '(':
 		tok = newToken(token.LPAREN, l.char)
 	case ')':
@@ -47,6 +78,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.COMMA, l.char)
 	case ';':
 		tok = newToken(token.SEMICOLON, l.char)
+	case '<':
+		tok = newToken(token.LT, l.char)
+	case '>':
+		tok = newToken(token.GT, l.char)
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -102,8 +137,3 @@ func isLetter(ch byte) bool {
 func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
 }
-
-
-
-
-
